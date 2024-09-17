@@ -66,21 +66,53 @@ router.get("/", verifyTokenAndAdmin, async (req, res)=>{
 
 // GET MONTHLY INCOME
 
-router.get("/income", verifyTokenAndAdmin, async (req, res)=>{
+router.get("/income", verifyTokenAndAdmin, async (req, res) => {
     const date = new Date();
-    const lastMonth = new Date(date.setMonth(date.getMonth() - 1));
-    const previousMonth = new Date(new Date().setMonth(lastMonth.getMonth() - 1));
-    try{
+    const lastYear = new Date(date.setFullYear(date.getFullYear() - 1));
+
+    try {
         const income = await Order.aggregate([
-            { $match: { createdAt: { $gte: previousMonth } } },
-            { $project: { month: { $month: "$createdAt" }, sales: "$amount" } },
-            { $group: { _id: "$month", total: { $sum: "$sales" } } }
+            { $match: { createdAt: { $gte: lastYear } } },
+            {
+                $project: {
+                    month: { $month: "$createdAt" },
+                    year: { $year: "$createdAt" },
+                    sales: "$amount",
+                },
+            },
+            {
+                $group: {
+                    _id: { year: "$year", month: "$month" },
+                    total: { $sum: "$sales" },
+                },
+            },
+            { $sort: { "_id.year": 1, "_id.month": 1 } },
         ]);
-        res.status(200).json(income);
-    }catch(err){
+
+        const monthNames = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ];
+
+        const formattedIncome = income.map((item) => ({
+            month: `${monthNames[item._id.month - 1]} ${item._id.year}`,
+            total: item.total,
+        }));
+
+        res.status(200).json(formattedIncome);
+    } catch (err) {
         res.status(500).json(err);
     }
-
-});    
+}); 
 
 export default router;
