@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import styled from 'styled-components'
+import React, { useEffect, useState } from 'react';
+import styled from 'styled-components';
 import Navbar from '../components/Navbar';
 import Announcement from '../components/Announcement';
 import Newsletter from '../components/Newsletter';
@@ -11,125 +11,191 @@ import { publicRequest } from '../requestMethods';
 import { addProduct } from '../redux/cartRedux';
 import { useDispatch } from 'react-redux';
 
-const Container = styled.div`
+const primaryColor = '#e91e63';
+const secondaryColor = '#333';
+const lightGray = '#f5f5f5';
+const darkGray = '#555';
 
+const Container = styled.div`
+  background: linear-gradient(135deg, ${lightGray} 25%, #ffffff 100%);
+  min-height: 100vh;
 `;
 
 const Wrapper = styled.div`
-    padding: 50px;
-    display: flex;
-    ${mobile({ padding: "10px", flexDirection:"column"})}
+  padding: 30px;
+  display: flex;
+  background-color: #fff;
+  ${mobile({ padding: "20px", flexDirection: "column" })}
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
 `;
 
 const ImgContainer = styled.div`
-    flex: 1;
-    padding: 0px 20px;
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const Image = styled.img`
-    width: 100%;
-    height: 90vh;
-    object-fit: cover;
-    ${mobile({ height: "40vh"})}
+  width: 100%;
+  max-width: 450px;
+  height: 70vh;
+  object-fit: contain;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  border-radius: 8px;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(233, 30, 99, 0.2);
+  }
+
+  ${mobile({ maxWidth: "100%", height: "auto" })}
 `;
 
 const InfoContainer = styled.div`
-    flex: 1;
-    padding: 0px 50px;
-    ${mobile({ padding: "10px"})}
+  flex: 1;
+  padding: 0px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  ${mobile({ padding: "20px 0px" })}
 `;
 
 const Title = styled.h1`
-    font-weight: 200;
-    font-size: 40px;
+  font-weight: 400;
+  font-size: 32px;
+  margin-bottom: 15px;
+  color: ${secondaryColor};
 `;
 
 const Desc = styled.p`
-    margin: 20px 0px;
+  font-size: 16px;
+  line-height: 1.8;
+  color: ${darkGray};
+  margin-bottom: 25px;
 `;
 
 const Price = styled.span`
-    font-weight: 100;
-    font-size: 40px;
+  font-weight: 500;
+  font-size: 30px;
+  color: ${primaryColor};
+  margin-bottom: 25px;
 `;
 
 const FilterContainer = styled.div`
-    width: 50%;
-    margin: 30px 0px;
-    display: flex;
-    justify-content: space-between;
-    ${mobile({ width: "100%"})}
+  width: 100%;
+  margin: 25px 0px;
+  display: flex;
+  justify-content: space-between;
+  ${mobile({ flexDirection: "column" })}
 `;
 
 const Filter = styled.div`
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
 `;
 
 const FilterTitle = styled.span`
-    font-size: 20px;
-    font-weight: 200;
+  font-size: 18px;
+  font-weight: 500;
+  color: ${secondaryColor};
+  margin-right: 12px;
 `;
 
 const FilterColor = styled.div`
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background-color: ${props => props.color};
-    margin: 0px 5px;
-    cursor: pointer;
-    border: ${props => (props.isSelected ? '2px solid teal' : 'none')};
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: ${props => props.color};
+  margin-right: 10px;
+  cursor: pointer;
+  border: ${props => (props.isSelected ? `3px solid ${primaryColor}` : '2px solid #ddd')};
+  transition: border 0.3s ease, transform 0.3s ease;
+
+  &:hover {
+    transform: scale(1.1);
+    border: 3px solid ${primaryColor};
+  }
 `;
 
 const FilterSize = styled.select`
-    margin-left: 10px;
-    padding: 5px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  outline: none;
+  font-size: 16px;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
+
+  &:focus {
+    border-color: ${primaryColor};
+    box-shadow: 0 0 5px rgba(233, 30, 99, 0.5);
+  }
 `;
 
-const FilterSizeOption = styled.option`
-`;
+const FilterSizeOption = styled.option``;
 
 const AddContainer = styled.div`
-    width: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    ${mobile({ width: "100%"})}
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  ${mobile({ flexDirection: "column" })}
 `;
 
 const AmountContainer = styled.div`
-    display: flex;
-    align-items: center;
-    font-weight: 700;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
 `;
 
 const Amount = styled.span`
-    width: 30px;
-    height: 30px;
-    border-radius: 10px;
-    border: 1px solid teal;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0px 5px;
+  width: 45px;
+  height: 45px;
+  border-radius: 10px;
+  border: 2px solid ${primaryColor};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0px 12px;
+  font-size: 20px;
+  font-weight: 600;
+  color: ${secondaryColor};
+  background-color: #fafafa;
 `;
 
 const Button = styled.button`
-    padding: 15px;
-    border: 2px solid teal;
-    background-color: white;
-    cursor: pointer;
-    font-weight: 500;
-    border-radius: 20px;
-    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-    &:hover {
-        background-color: #55ceba;
-        border-color: #55ceba;
-        color: white;
-    }
-`;
+  padding: 14px 36px;
+  border: none;
+  background-color: ${primaryColor};
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background-color: #d81b60;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  &:disabled {
+    background-color: #bbb;
+    cursor: not-allowed;
+  }
+`;
 
 const Product = () => {
     const location = useLocation();
@@ -140,73 +206,93 @@ const Product = () => {
     const [size, setSize] = useState("");
     const dispatch = useDispatch();
 
-    useEffect(()=>{
-        const getProduct = async ()=>{
-            try{
-                const res = await publicRequest.get("/products/find/"+ id);
+    useEffect(() => {
+        const getProduct = async () => {
+            try {
+                const res = await publicRequest.get("/products/find/" + id);
                 setProduct(res.data);
-            } catch(err){
+            } catch (err) {
                 console.log(err);
             }
         }
         getProduct();
     }, [id]);
 
-    const handleQuantity = (type)=>{
-        if(type === "dec"){
+    const handleQuantity = (type) => {
+        if (type === "dec") {
             quantity > 1 && setQuantity(quantity - 1);
         } else {
             setQuantity(quantity + 1);
         }
     };
 
-    const handleClick = ()=>{
-        dispatch(addProduct({ ...product, quantity, color, size}));
+    const handleClick = () => {
+        if (color && size) {
+            dispatch(addProduct({ ...product, quantity, color, size }));
+        } else {
+            alert("Please select color and size.");
+        }
     }
 
-  return (
-    <Container>
-        <Navbar/>
-        <Announcement/>
-        <Wrapper>
-            <ImgContainer>
-                <Image src={product.img}/>
-            </ImgContainer>
-            <InfoContainer>
-                <Title>{product.title}</Title>
-                <Desc>{product.desc}</Desc>
-                <Price>Rs. {product.price}</Price>
-                <FilterContainer>
-                    <Filter>
-                        <FilterTitle>Color</FilterTitle>
-                        {product.color?.map((c)=>(
-                            <FilterColor color={c} key={c} isSelected={color === c} onClick={()=>setColor(c)}/>
-                        ))}
-                    </Filter> 
-                    <Filter>
-                        <FilterTitle>Size</FilterTitle>
-                        <FilterSize onChange={(e)=>setSize(e.target.value)}>
-                            {product.size?.map((s)=>(
-                                <FilterSizeOption key={s}>{s}</FilterSizeOption>
+    return (
+        <Container>
+            <Navbar />
+            <Announcement />
+            <Wrapper>
+                <ImgContainer>
+                    <Image src={product.img} alt={product.title} />
+                </ImgContainer>
+                <InfoContainer>
+                    <Title>{product.title}</Title>
+                    <Desc>{product.desc}</Desc>
+                    <Price>Rs. {product.price}</Price>
+                    <FilterContainer>
+                        <Filter>
+                            <FilterTitle>Color:</FilterTitle>
+                            {product.color?.map((c) => (
+                                <FilterColor
+                                    color={c}
+                                    key={c}
+                                    isSelected={color === c}
+                                    onClick={() => setColor(c)}
+                                    title={c}
+                                />
                             ))}
-                        </FilterSize>
-                    </Filter>     
-                </FilterContainer>
-                <AddContainer>
-                    <AmountContainer>
-                        <Remove onClick={()=>handleQuantity("dec")}/>
-                        <Amount>{quantity}</Amount>
-                        <Add onClick={()=>handleQuantity("inc")}/>
-                    </AmountContainer>
-                    <Button onClick={handleClick}>ADD TO CART</Button>
-                </AddContainer>
-            </InfoContainer>
-        </Wrapper>
-        <Newsletter/>
-        <Footer/>
-    </Container>
-  )
+                        </Filter>
+                        <Filter>
+                            <FilterTitle>Size:</FilterTitle>
+                            <FilterSize onChange={(e) => setSize(e.target.value)} value={size}>
+                                <FilterSizeOption disabled value="">
+                                    Select Size
+                                </FilterSizeOption>
+                                {product.size?.map((s) => (
+                                    <FilterSizeOption key={s} value={s}>{s}</FilterSizeOption>
+                                ))}
+                            </FilterSize>
+                        </Filter>
+                    </FilterContainer>
+                    <AddContainer>
+                        <AmountContainer>
+                            <Remove
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => handleQuantity("dec")}
+                            />
+                            <Amount>{quantity}</Amount>
+                            <Add
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => handleQuantity("inc")}
+                            />
+                        </AmountContainer>
+                        <Button onClick={handleClick}>
+                            ADD TO CART
+                        </Button>
+                    </AddContainer>
+                </InfoContainer>
+            </Wrapper>
+            <Newsletter />
+            <Footer />
+        </Container>
+    )
 }
 
-export default Product
-
+export default Product;
